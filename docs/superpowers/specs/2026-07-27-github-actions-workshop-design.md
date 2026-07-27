@@ -33,7 +33,7 @@ gha-for-testers/
 ├── tests/test_cart.py     # pytest tests — includes one we deliberately break live
 ├── requirements.txt       # just pytest
 ├── README.md              # short intro + mental-model diagram + status badge (added at Stage 4)
-├── FACILITATOR.md         # the run-sheet + solo dry-run checklist
+├── facilitator.html       # the scripted presenter view (open in a browser, read from screen)
 ├── CHEATSHEET.md          # one-page handout
 ├── stages/                # reference copies of each stage's final YAML (facilitator safety net)
 │   ├── v1-push.yml
@@ -107,11 +107,25 @@ Status badge line in README, `pytest --junitxml=report.xml`, and an `actions/upl
 
 ## 6. Facilitator materials
 
-### `FACILITATOR.md` — run-sheet + solo dry-run checklist
-- Per-stage blocks with **SAY / DO / TYPE / SHOW / aha**.
-- Exact YAML to type for Stage 1 and the precise one-line test edit that turns the suite red (and the edit that turns it green again).
-- A **"Dry-run for yourself first"** section: an ordered, tickable checklist so the facilitator can execute the entire session solo end-to-end and confirm understanding before presenting.
-- A **"if wifi / Actions is slow" fallback**: pre-captured screenshots of each green/red run and the `stages/` reference files, so the story survives a bad network.
+### `facilitator.html` — fully-scripted visual presenter view
+A single self-contained HTML file (inline CSS/JS, no internet needed) the facilitator **opens in a browser and reads straight off the screen**. It must never require searching for words or remembering the next step — everything is on screen, in order, visually unmistakable. It is the primary teaching material; there is no separate markdown run-sheet.
+
+**Layout — every step is one "card", and every card has the same three colour-coded zones so the eye always knows where to look:**
+
+| Zone | Label & colour | Contents |
+|---|---|---|
+| 🗣️ **TALK** | "Say this" (blue) | The exact words to read aloud, verbatim — including the transition line into the step and the question to pose to the room. Big, high-contrast, read-aloud type size. |
+| 🖱️ **DO** | "Do this" (amber) | The precise clicks/navigation named literally (e.g. "Click the **Actions** tab → **Configure** → green **Commit changes** button") plus any exact text/YAML to type, in a copy-button code block. |
+| 📺 **SHOW** | "Show them" (green) | How to demonstrate progress: what to point at and the exact words to narrate while it happens ("yellow dot = running… now a green tick = pass"), plus the one-sentence **aha** to say out loud. |
+
+**Structure and navigation:**
+- Cards are ordered exactly as the 60-minute run (§5); each card shows its **stage number and a running clock target** (e.g. "Stage 2 · aim to be here by 0:25") so the facilitator can pace themselves at a glance.
+- A slim **progress rail / step list** down the side (or top) to jump between cards; big Next/Prev controls or arrow-key navigation so it works like a teleprompter.
+- The complete Stage 1 YAML to type and the precise one-line test edit that turns the suite **red** — plus the exact edit that turns it **green** again — each in its own card with its own TALK script and a copy button.
+- A **glossary strip** (how to say "runner", "job", "workflow" in plain words) pinned where it's always visible, so terminology stays consistent.
+- A **"Dry-run for yourself first"** card at the top: an ordered, checkbox list (state saved in the browser) so the facilitator can execute the whole session solo end-to-end — reading the same script to themselves — and tick off each confirmed step before 2026-07-30.
+- A **"if wifi / Actions is slow" fallback** card: embedded screenshots of each green/red run + pointer to the `stages/` reference files, with a TALK line to cover the pause.
+- Print-friendly CSS so it can also be printed as a paper script if preferred.
 
 ### `CHEATSHEET.md` — one-page handout
 - Mental-model diagram (event → workflow → job → step → runner).
@@ -121,7 +135,8 @@ Status badge line in README, `pytest --junitxml=report.xml`, and an `actions/upl
 
 ## 7. Success criteria
 
-- The facilitator can complete a full solo dry-run using only `FACILITATOR.md`, watching real green and red runs in their own GitHub repo, before 2026-07-30.
+- The facilitator can run the entire session by reading `facilitator.html` aloud verbatim, without improvising wording or hunting for the next step — talk / do / show is unmistakable on every card.
+- The facilitator can complete a full solo dry-run using only `facilitator.html`, watching real green and red runs in their own GitHub repo, and ticking off every step, before 2026-07-30.
 - During the session, the room sees at least one live green run, one red run, and one red→green recovery.
 - Each of the 4 learning objectives (§1) is explicitly hit and recapped.
 - The whole demo fits in 60 minutes with a working fallback if the network fails.
