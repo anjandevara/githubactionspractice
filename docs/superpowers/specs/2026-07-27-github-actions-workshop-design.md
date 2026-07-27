@@ -118,6 +118,10 @@ A single self-contained HTML file (inline CSS/JS, no internet needed) the facili
 | 🖱️ **DO** | "Do this" (amber) | The precise clicks/navigation named literally (e.g. "Click the **Actions** tab → **Configure** → green **Commit changes** button") plus any exact text/YAML to type, in a copy-button code block. |
 | 📺 **SHOW** | "Show them" (green) | How to demonstrate progress: what to point at and the exact words to narrate while it happens ("yellow dot = running… now a green tick = pass"), plus the one-sentence **aha** to say out loud. |
 
+**Showing "where it lives":**
+- The intro (0–8 min) includes a **file-tree visual baked into the card** — the repo structure with `.github/workflows/tests.yml` highlighted — so the facilitator can point at exactly where a workflow lives before ever opening GitHub. The cheat-sheet carries the same tree.
+- Right after the first commit, a dedicated **"show them the folder" step**: navigate the GitHub repo file browser into `.github` → `workflows`, click `tests.yml`, and narrate "this is the whole configuration — it's just this one file, in this one folder." This makes objective #2 (where config lives) concrete on screen, not just spoken.
+
 **Structure and navigation:**
 - Cards are ordered exactly as the 60-minute run (§5); each card shows its **stage number and a running clock target** (e.g. "Stage 2 · aim to be here by 0:25") so the facilitator can pace themselves at a glance.
 - A slim **progress rail / step list** down the side (or top) to jump between cards; big Next/Prev controls or arrow-key navigation so it works like a teleprompter.
