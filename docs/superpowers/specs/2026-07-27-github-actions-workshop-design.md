@@ -110,6 +110,8 @@ Status badge line in README, `pytest --junitxml=report.xml`, and an `actions/upl
 ### `facilitator.html` — fully-scripted visual presenter view
 A single self-contained HTML file (inline CSS/JS, no internet needed) the facilitator **opens in a browser and reads straight off the screen**. It must never require searching for words or remembering the next step — everything is on screen, in order, visually unmistakable. It is the primary teaching material; there is no separate markdown run-sheet.
 
+**Governing principle — spoon-fed, zero assumed knowledge.** Every step is broken down to the individual click and the exact button label; nothing is left to inference. This includes calling out what GitHub does *automatically* so the facilitator isn't surprised — e.g. the Stage 1 card states plainly: "You do NOT create the `.github/workflows` folder — GitHub creates it for you when you commit." Assume the reader (including the facilitator on their dry-run) has never used GitHub Actions before. If a step could prompt "wait, how?", the answer is already on the card.
+
 **Layout — every step is one "card", and every card has the same three colour-coded zones so the eye always knows where to look:**
 
 | Zone | Label & colour | Contents |
