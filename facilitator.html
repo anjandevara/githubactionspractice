@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Facilitator — GitHub Actions for testers</title>
+<style>
+  :root { --blue:#378ADD; --amber:#EF9F27; --green:#639922; --ink:#1a1a1a; --muted:#666; --line:#ddd; --bg:#fafafa; }
+  * { box-sizing: border-box; }
+  body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; color: var(--ink); background: var(--bg); margin: 0; line-height: 1.6; }
+  .wrap { max-width: 860px; margin: 0 auto; padding: 16px; }
+  .glossary { position: sticky; top: 0; z-index: 5; background: #fff; border-bottom: 1px solid var(--line); padding: 8px 16px; font-size: 13px; color: var(--muted); }
+  .glossary b { color: var(--ink); font-weight: 600; }
+  .card { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 18px; margin: 16px 0; display: none; }
+  .card.active { display: block; }
+  .card.checklist, .card.fallback { display: block; }
+  .head { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+  .stage { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 3px 9px; font-size: 13px; }
+  .clock { font-size: 13px; color: var(--muted); }
+  .zone { border-left: 4px solid var(--line); border-radius: 0; padding: 10px 14px; margin: 10px 0; background: #fff; }
+  .zone .label { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; margin-bottom: 6px; }
+  .say { border-left-color: var(--blue); background: #f2f8fe; }
+  .say .label { color: var(--blue); }
+  .say p { font-size: 20px; margin: 0; }
+  .do { border-left-color: var(--amber); background: #fef8ef; }
+  .do .label { color: #a5670c; }
+  .show { border-left-color: var(--green); background: #f3f8ea; }
+  .show .label { color: #4c7515; }
+  .aha { display: inline-block; margin-top: 8px; background: #e7f3d8; color: #3b5c12; border-radius: 8px; padding: 5px 10px; font-size: 15px; }
+  pre { position: relative; background: #f6f6f4; border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; overflow-x: auto; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 13px; line-height: 1.7; }
+  .copy { position: absolute; top: 8px; right: 8px; font: inherit; font-size: 12px; padding: 3px 8px; border: 1px solid var(--line); border-radius: 6px; background: #fff; cursor: pointer; }
+  .tree { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 14px; line-height: 1.9; }
+  .tree .hi { background: #e7f3d8; color: #3b5c12; border-radius: 6px; padding: 1px 8px; }
+  .nav { display: flex; justify-content: space-between; gap: 8px; margin-top: 14px; }
+  .nav button, .rail button { font: inherit; padding: 8px 12px; border: 1px solid var(--line); border-radius: 8px; background: #fff; cursor: pointer; }
+  .rail { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 4px; }
+  .rail button.here { border-color: var(--blue); color: var(--blue); font-weight: 600; }
+  .checklist li { margin: 6px 0; }
+  .fallback { border-color: var(--amber); }
+  .runrow { display: flex; align-items: center; gap: 8px; border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; margin: 6px 0; font-size: 14px; }
+  .dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
+  .dot.green { background: #2da44e; } .dot.red { background: #cf222e; }
+  @media print { .card { display: block !important; } .nav, .rail { display: none; } }
+</style>
+</head>
+<body>
+<div class="glossary">
+  Plain words: <b>runner</b> = the computer GitHub lends you · <b>job</b> = a batch of steps on one runner · <b>workflow</b> = the whole .yml file · <b>step</b> = one command · <b>event</b> = the thing that starts it.
+</div>
+<div class="wrap">
+  <div class="rail" id="rail"></div>
+
+  <div class="card checklist">
+    <h2 style="margin-top:0">Dry-run for yourself first ✅</h2>
+    <p style="color:#666">Tick each as you confirm it in your own GitHub repo. State is saved in this browser.</p>
+    <ul style="list-style:none;padding-left:0">
+      <li><label><input type="checkbox" data-k="dr1"> Pushed this repo to my GitHub account</label></li>
+      <li><label><input type="checkbox" data-k="dr2"> Built tests.yml live from blank → first green run</label></li>
+      <li><label><input type="checkbox" data-k="dr3"> Opened .github/workflows/tests.yml on GitHub and pointed at it</label></li>
+      <li><label><input type="checkbox" data-k="dr4"> Added pull_request + workflow_dispatch; clicked Run workflow</label></li>
+      <li><label><input type="checkbox" data-k="dr5"> Broke apply_discount → saw red ✗ on a PR → reverted → green ✓</label></li>
+      <li><label><input type="checkbox" data-k="dr6"> Added the matrix; saw 3 jobs run</label></li>
+      <li><label><input type="checkbox" data-k="dr7"> Added badge + artifact; downloaded the report</label></li>
+      <li><label><input type="checkbox" data-k="dr8"> Timed myself — finished within 60 minutes</label></li>
+    </ul>
+  </div>
+
+  <div class="card fallback">
+    <h2 style="margin-top:0">If wifi / Actions is slow ⚠️</h2>
+    <div class="zone say"><div class="label">Say this</div><p>"While that runs, here's exactly what you'll see." </p></div>
+    <p>Point at these mock run rows and keep talking; the real run will catch up.</p>
+    <div class="runrow"><span class="dot green"></span> Tests · main · passed in 14s</div>
+    <div class="runrow"><span class="dot red"></span> Tests · fix-discount · failed in 12s — 1 test failed</div>
+    <p style="color:#666">Backup copies of every stage are in <code>.github/workflows/stages/</code> (v1–v4) if you need to paste a known-good file.</p>
+  </div>
+
+  <div class="card step" data-short="What is CI">
+    <div class="head"><span class="stage">Intro · 1 of 8</span><span class="clock">aim: 0:00–0:08</span></div>
+    <div class="zone say"><div class="label">Say this</div><p>"Everyone here runs tests by hand. Today we hand that job to a robot that runs them for us — every time the code changes. That robot is GitHub Actions. It lives inside your repo, as one text file."</p></div>
+    <div class="zone show"><div class="label">Show them — where it lives</div>
+      <div class="tree">
+        <div>📁 gha-for-testers</div>
+        <div>&nbsp;&nbsp;📁 src</div>
+        <div>&nbsp;&nbsp;📁 tests</div>
+        <div>&nbsp;&nbsp;📁 .github</div>
+        <div>&nbsp;&nbsp;&nbsp;&nbsp;📁 workflows</div>
+        <div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="hi">📄 tests.yml</span> ← the whole configuration</div>
+      </div>
+      <p>"GitHub looks in exactly one place — <code>.github/workflows</code>. Any <code>.yml</code> file here becomes a workflow."</p>
+      <span class="aha">Aha: "It's not scary infrastructure — it's one file in one folder."</span>
+    </div>
+  </div>
+
+  <div class="card step" data-short="Stage 1 build">
+    <div class="head"><span class="stage">Stage 1 · 2 of 8</span><span class="clock">aim: 0:08–0:25</span></div>
+    <div class="zone say"><div class="label">Say this</div><p>"Watch me build it from nothing. I'll type each line and tell you what it means. You do NOT make the folder — GitHub creates it for you the moment you commit."</p></div>
+    <div class="zone do"><div class="label">Do this</div>
+      <p>Click the <b>Actions</b> tab → <b>set up a workflow yourself</b>. Delete the sample. Rename the file to <b>tests.yml</b>. Type:</p>
+      <pre>name: Tests
+on: push
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements.txt
+      - run: pytest</pre>
+      <p>Then click the green <b>Commit changes…</b> button → <b>Commit changes</b>.</p>
+    </div>
+    <div class="zone show"><div class="label">Show them</div>
+      <p>Narrate as you type: "<b>name</b> is just a label. <b>on: push</b> is WHEN — every push. <b>jobs</b> → one job called test. <b>runs-on</b> is WHICH machine. <b>steps</b> are WHAT, in order: get the code, install Python, install pytest, run pytest."</p>
+      <span class="aha">Aha: "That's the whole file. Five ideas: name, on, jobs, runs-on, steps."</span>
+    </div>
+  </div>
+
+  <div class="card step" data-short="Show the folder">
+    <div class="head"><span class="stage">Stage 1 · 3 of 8</span><span class="clock">aim: ~0:20</span></div>
+    <div class="zone say"><div class="label">Say this</div><p>"Remember I said GitHub makes the folder? Let's go look — it's really there now."</p></div>
+    <div class="zone do"><div class="label">Do this</div><p>Click the <b>Code</b> tab. Click the <b>.github</b> folder → <b>workflows</b> folder → <b>tests.yml</b>.</p></div>
+    <div class="zone show"><div class="label">Show them</div>
+      <p>Point at the path breadcrumb <code>.github / workflows / tests.yml</code>: "This is the entire configuration. One file, one folder — and I never created the folder myself."</p>
+      <span class="aha">Aha: "Committing the file created the folder. That's all the setup there is."</span>
+    </div>
+  </div>
+
+  <div class="card step" data-short="First green run">
+    <div class="head"><span class="stage">Stage 1 · 4 of 8</span><span class="clock">aim: ~0:23</span></div>
+    <div class="zone say"><div class="label">Say this</div><p>"The moment I committed, the robot started. Let's watch it."</p></div>
+    <div class="zone do"><div class="label">Do this</div><p>Click the <b>Actions</b> tab. Click the newest run at the top. Click the <b>test</b> job to expand the steps.</p></div>
+    <div class="zone show"><div class="label">Show them</div>
+      <p>Point at the status: "A yellow dot means it's running… now a <b>green tick</b> — every test passed, and nobody touched a keyboard. Click a step to see the actual pytest output."</p>
+      <span class="aha">Aha: "That's continuous integration. That's the whole idea."</span>
+    </div>
+  </div>
+
+  <div class="card step" data-short="Stage 2 PR gate">
+    <div class="head"><span class="stage">Stage 2 · 5 of 8</span><span class="clock">aim: 0:25–0:38</span></div>
+    <div class="zone say"><div class="label">Say this</div><p>"Right now it runs on a push. But the real power is stopping a broken change BEFORE it merges. Let's make it run on pull requests too — and give ourselves a manual button."</p></div>
+    <div class="zone do"><div class="label">Do this — edit the triggers</div>
+      <p><b>Actions</b> is done; go to <b>Code</b> → open <code>.github/workflows/tests.yml</code> → click the pencil ✏️. Replace the <code>on: push</code> line with:</p>
+      <pre>on:
+  push:
+  pull_request:
+  workflow_dispatch:</pre>
+      <p>Commit. Now click <b>Actions</b> → <b>Tests</b> → the <b>Run workflow</b> button appeared — that's <code>workflow_dispatch</code>. Click it to run on demand.</p>
+    </div>
+    <div class="zone do"><div class="label">Do this — break it on a branch</div>
+      <p>Go to <b>Code</b> → open <code>src/cart.py</code> → pencil ✏️. Change this one line:</p>
+      <pre>return round(amount * (1 - percent / 100), 2)</pre>
+      <p>to (a real bug — it forgets the discount):</p>
+      <pre>return round(amount, 2)</pre>
+      <p>Under "Commit changes", choose <b>Create a new branch</b> (e.g. <code>fix-discount</code>) → <b>Propose changes</b> → <b>Create pull request</b>.</p>
+    </div>
+    <div class="zone show"><div class="label">Show them</div>
+      <p>On the PR, point at the checks box: "Yellow… now a <b>red ✗</b>. The robot ran our tests on my change and one failed — <code>test_apply_discount</code>. GitHub is telling us: don't merge this."</p>
+      <p>Then fix it: edit the branch's <code>cart.py</code> back to the correct line, commit. Watch the check go <b>green ✓</b>. Merge.</p>
+      <span class="aha">Aha: "The test caught my bug automatically — that's the safety net."</span>
+    </div>
+  </div>
+
+  <div class="card step" data-short="Stage 3 matrix">
+    <div class="head"><span class="stage">Stage 3 · 6 of 8</span><span class="clock">aim: 0:38–0:48</span></div>
+    <div class="zone say"><div class="label">Say this</div><p>"Our users aren't all on one Python version. Watch us test three at once — from one push."</p></div>
+    <div class="zone do"><div class="label">Do this</div>
+      <p>Edit <code>tests.yml</code>. Under <code>test:</code>, add a <code>strategy</code> block and swap the fixed version for the matrix value:</p>
+      <pre>    strategy:
+      matrix:
+        python-version: ["3.10", "3.11", "3.12"]</pre>
+      <p>Change the setup-python <code>python-version:</code> line to:</p>
+      <pre>          python-version: ${{ matrix.python-version }}</pre>
+      <p>Commit. (Full file is <code>stages/v3-matrix.yml</code> if you need it.)</p>
+    </div>
+    <div class="zone show"><div class="label">Show them</div>
+      <p>In <b>Actions</b>, point at the run: "One push — but three jobs, one per version, running in parallel. Each gets its own green tick."</p>
+      <span class="aha">Aha: "Coverage across versions for free — you just listed them."</span>
+    </div>
+  </div>
+
+  <div class="card step" data-short="Stage 4 badge">
+    <div class="head"><span class="stage">Stage 4 · 7 of 8</span><span class="clock">aim: 0:48–0:54</span></div>
+    <div class="zone say"><div class="label">Say this</div><p>"Two finishing touches testers love: a live badge that proves we're green, and a saved test report you can download."</p></div>
+    <div class="zone do"><div class="label">Do this</div>
+      <p>Edit <code>tests.yml</code>: change <code>- run: pytest</code> to produce a report and add an upload step:</p>
+      <pre>      - run: pytest --junitxml=report.xml
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-report-${{ matrix.python-version }}
+          path: report.xml</pre>
+      <p>Commit. Then edit <code>README.md</code> and replace <code>OWNER/REPO</code> in the badge line with your username and repo. Commit.</p>
+    </div>
+    <div class="zone show"><div class="label">Show them</div>
+      <p>Show the README badge going green. In the latest <b>Actions</b> run, scroll to <b>Artifacts</b> and download <code>test-report-3.12</code>. Mention: "You can also run this on a timer with <code>schedule:</code> — e.g. every night."</p>
+      <span class="aha">Aha: "Now anyone can see we're green, and every run keeps its receipts."</span>
+    </div>
+  </div>
+
+  <div class="card step" data-short="Recap">
+    <div class="head"><span class="stage">Recap · 8 of 8</span><span class="clock">aim: 0:54–1:00</span></div>
+    <div class="zone say"><div class="label">Say this</div><p>"In one hour we answered four questions. What is it? A robot that runs your tests. Where does it live? One .yml file in .github/workflows. How is it triggered? push, pull_request, the manual button, and schedule. How do you write it? name, on, jobs, runs-on, steps — mind the indentation."</p></div>
+    <div class="zone do"><div class="label">Do this</div><p>Share the repo link and hand out <code>CHEATSHEET.md</code>. Open the floor for questions.</p></div>
+    <div class="zone show"><div class="label">Show them</div><p>Flip back to the green matrix run and the badge as the closing image.</p><span class="aha">Aha: "You could set this up on your own project this afternoon."</span></div>
+  </div>
+
+  <div class="nav">
+    <button id="prev">← Prev</button>
+    <button id="next">Next →</button>
+  </div>
+</div>
+<script>
+  function copyBtn(pre){ const b=document.createElement('button'); b.className='copy'; b.textContent='Copy';
+    b.onclick=()=>{ const t=pre.cloneNode(true); const x=t.querySelector('.copy'); if(x)x.remove();
+    navigator.clipboard.writeText(t.textContent.trim()); b.textContent='Copied'; setTimeout(()=>b.textContent='Copy',1200); };
+    pre.appendChild(b); }
+  document.querySelectorAll('pre').forEach(copyBtn);
+
+  const cards=[...document.querySelectorAll('.card.step')];
+  const rail=document.getElementById('rail');
+  let i=0;
+  cards.forEach((c,n)=>{ const b=document.createElement('button'); b.textContent=(c.dataset.short||('#'+n));
+    b.onclick=()=>go(n); rail.appendChild(b); });
+  function go(n){ i=Math.max(0,Math.min(cards.length-1,n));
+    cards.forEach((c,k)=>c.classList.toggle('active',k===i));
+    [...rail.children].forEach((b,k)=>b.classList.toggle('here',k===i));
+    window.scrollTo({top:0,behavior:'smooth'}); }
+  document.getElementById('prev').onclick=()=>go(i-1);
+  document.getElementById('next').onclick=()=>go(i+1);
+  document.addEventListener('keydown',e=>{ if(e.key==='ArrowRight')go(i+1); if(e.key==='ArrowLeft')go(i-1); });
+
+  document.querySelectorAll('input[type=checkbox][data-k]').forEach(cb=>{
+    cb.checked=localStorage.getItem(cb.dataset.k)==='1';
+    cb.onchange=()=>localStorage.setItem(cb.dataset.k, cb.checked?'1':'0'); });
+
+  go(0);
+</script>
+</body>
+</html>
