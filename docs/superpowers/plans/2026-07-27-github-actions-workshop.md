@@ -17,6 +17,7 @@
 - Reference workflows live in `.github/workflows/stages/` (a subfolder). GitHub Actions only runs `*.yml` at the top level of `.github/workflows/`, so subfolder files never run — this is why they are safe to ship. The top-level `tests.yml` is intentionally NOT shipped; the facilitator builds it live during the session.
 - Commit messages: no `Co-Authored-By` / Claude attribution trailers.
 - No new Python dependency beyond `pytest`.
+- All local test runs use a virtual environment (`.venv/`, git-ignored); pytest must never be installed into system Python. CI runners are ephemeral and do not need a venv — they keep the plain `setup-python` + `pip install` steps.
 - Sentence-case copy; no emoji inside code. (Zone-label emoji in `facilitator.html` UI are allowed as they are content, not code.)
 
 ---
@@ -49,11 +50,23 @@ pytest
 - [ ] **Step 3: Create `.gitignore`**
 
 ```
+.venv/
 __pycache__/
 *.pyc
 .pytest_cache/
 report.xml
 ```
+
+- [ ] **Step 3b: Create and activate a virtual environment, then install pytest into it**
+
+All local test runs in this task use a venv so pytest never touches system Python. Run:
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+```
+Expected: pytest installs into `.venv`. `which python` now points inside `.venv`. Keep this venv active for every `pytest` run below. (`.venv/` is git-ignored — do not commit it.)
 
 - [ ] **Step 4: Write the failing tests**
 
@@ -279,6 +292,8 @@ a robot that runs your tests automatically whenever code changes.
 
 ## Run the tests yourself
 
+    python3 -m venv .venv
+    source .venv/bin/activate
     pip install -r requirements.txt
     pytest
 
