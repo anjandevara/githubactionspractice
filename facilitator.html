@@ -13,6 +13,7 @@
   .glossary b { color: var(--ink); font-weight: 600; }
   .card { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 18px; margin: 16px 0; display: none; }
   .card.active { display: block; }
+  .card.step { scroll-margin-top: 96px; }
   .card.checklist, .card.fallback { display: block; }
   .head { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
   .stage { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 3px 9px; font-size: 13px; }
@@ -77,6 +78,7 @@
   <div class="card step" data-short="What is CI">
     <div class="head"><span class="stage">Intro · 1 of 8</span><span class="clock">aim: 0:00–0:08</span></div>
     <div class="zone say"><div class="label">Say this</div><p>"Everyone here runs tests by hand. Today we hand that job to a robot that runs them for us — every time the code changes. That robot is GitHub Actions. It lives inside your repo, as one text file."</p></div>
+    <div class="zone do"><div class="label">Do this</div><p>Have the sample repo open on screen at the <b>Code</b> tab, so everyone can see the <code>src</code>, <code>tests</code>, and <code>.github</code> folders while you talk.</p></div>
     <div class="zone show"><div class="label">Show them — where it lives</div>
       <div class="tree">
         <div>📁 gha-for-testers</div>
@@ -155,7 +157,7 @@ jobs:
       <p>Under "Commit changes", choose <b>Create a new branch</b> (e.g. <code>fix-discount</code>) → <b>Propose changes</b> → <b>Create pull request</b>.</p>
     </div>
     <div class="zone show"><div class="label">Show them</div>
-      <p>On the PR, point at the checks box: "Yellow… now a <b>red ✗</b>. The robot ran our tests on my change and one failed — <code>test_apply_discount</code>. GitHub is telling us: don't merge this."</p>
+      <p>On the PR, point at the checks box: "Yellow… now a <b>red ✗</b>. The robot ran our tests on my change and one failed — <code>test_apply_discount_takes_percent_off</code>. GitHub is telling us: don't merge this."</p>
       <p>Then fix it: edit the branch's <code>cart.py</code> back to the correct line, commit. Watch the check go <b>green ✓</b>. Merge.</p>
       <span class="aha">Aha: "The test caught my bug automatically — that's the safety net."</span>
     </div>
@@ -225,7 +227,7 @@ jobs:
   function go(n){ i=Math.max(0,Math.min(cards.length-1,n));
     cards.forEach((c,k)=>c.classList.toggle('active',k===i));
     [...rail.children].forEach((b,k)=>b.classList.toggle('here',k===i));
-    window.scrollTo({top:0,behavior:'smooth'}); }
+    cards[i].scrollIntoView({behavior:'smooth',block:'start'}); }
   document.getElementById('prev').onclick=()=>go(i-1);
   document.getElementById('next').onclick=()=>go(i+1);
   document.addEventListener('keydown',e=>{ if(e.key==='ArrowRight')go(i+1); if(e.key==='ArrowLeft')go(i-1); });
