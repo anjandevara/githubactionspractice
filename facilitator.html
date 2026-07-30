@@ -3,103 +3,217 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Facilitator — GitHub Actions for testers</title>
+<title>Calling script — GitHub Actions for testers</title>
 <style>
-  :root { --blue:#378ADD; --amber:#EF9F27; --green:#639922; --ink:#1a1a1a; --muted:#666; --line:#ddd; --bg:#fafafa; }
-  * { box-sizing: border-box; }
-  body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; color: var(--ink); background: var(--bg); margin: 0; line-height: 1.6; }
-  .wrap { max-width: 860px; margin: 0 auto; padding: 16px; }
-  .glossary { position: sticky; top: 0; z-index: 5; background: #fff; border-bottom: 1px solid var(--line); padding: 8px 16px; font-size: 13px; color: var(--muted); }
-  .glossary b { color: var(--ink); font-weight: 600; }
-  .card { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 18px; margin: 16px 0; display: none; }
-  .card.active { display: block; }
-  .card.step { scroll-margin-top: 96px; }
-  .card.checklist, .card.fallback { display: block; }
-  .head { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
-  .stage { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 3px 9px; font-size: 13px; }
-  .clock { font-size: 13px; color: var(--muted); }
-  .zone { border-left: 4px solid var(--line); border-radius: 0; padding: 10px 14px; margin: 10px 0; background: #fff; }
-  .zone .label { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; margin-bottom: 6px; }
-  .say { border-left-color: var(--blue); background: #f2f8fe; }
-  .say .label { color: var(--blue); }
-  .say p { font-size: 20px; margin: 0; }
-  .do { border-left-color: var(--amber); background: #fef8ef; }
-  .do .label { color: #a5670c; }
-  .show { border-left-color: var(--green); background: #f3f8ea; }
-  .show .label { color: #4c7515; }
-  .aha { display: inline-block; margin-top: 8px; background: #e7f3d8; color: #3b5c12; border-radius: 8px; padding: 5px 10px; font-size: 15px; }
-  pre { position: relative; background: #f6f6f4; border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; overflow-x: auto; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 13px; line-height: 1.7; }
-  .copy { position: absolute; top: 8px; right: 8px; font: inherit; font-size: 12px; padding: 3px 8px; border: 1px solid var(--line); border-radius: 6px; background: #fff; cursor: pointer; }
-  .tree { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 14px; line-height: 1.9; }
-  .tree .hi { background: #e7f3d8; color: #3b5c12; border-radius: 6px; padding: 1px 8px; }
-  .nav { display: flex; justify-content: space-between; gap: 8px; margin-top: 14px; }
-  .nav button, .rail button { font: inherit; padding: 8px 12px; border: 1px solid var(--line); border-radius: 8px; background: #fff; cursor: pointer; }
-  .rail { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 4px; }
-  .rail button.here { border-color: var(--blue); color: var(--blue); font-weight: 600; }
-  .checklist li { margin: 6px 0; }
-  .fallback { border-color: var(--amber); }
-  .runrow { display: flex; align-items: center; gap: 8px; border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; margin: 6px 0; font-size: 14px; }
-  .dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
-  .dot.green { background: #2da44e; } .dot.red { background: #cf222e; }
-  @media print { .card { display: block !important; } .nav, .rail { display: none; } }
+  :root{
+    --stage:#0E1116; --panel:#171B22; --panel-2:#12161D; --term:#0A0D12;
+    --edge:#28303B; --edge-2:#39424F;
+    --ink:#EEF2F7; --body:#C7D0DA; --dim:#8B97A6;
+    --voice:#F4B740; --hands:#56C2E6; --screen:#7FD858; --alert:#F0603E;
+    --radius:14px;
+  }
+  *{box-sizing:border-box}
+  html{scroll-padding-top:118px}
+  body{
+    margin:0; background:var(--stage); color:var(--body);
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    line-height:1.6; -webkit-font-smoothing:antialiased;
+  }
+  .serif{font-family:Georgia,"Times New Roman",serif}
+  .mono{font-family:ui-monospace,Menlo,Consolas,monospace}
+
+  /* ---- gallery bar (signature) ---- */
+  .gallery{position:fixed; inset:0 0 auto 0; z-index:40; background:rgba(19,23,30,.92);
+    backdrop-filter:saturate(1.2) blur(8px); border-bottom:1px solid var(--edge)}
+  .bar{display:flex; align-items:center; gap:18px; padding:11px 20px; max-width:1120px; margin:0 auto; flex-wrap:wrap}
+  .brand{display:flex; align-items:center; gap:9px; font-size:12px; letter-spacing:.16em; text-transform:uppercase; color:var(--dim); font-weight:700}
+  .lamp{width:10px; height:10px; border-radius:50%; background:var(--voice); box-shadow:0 0 0 0 rgba(244,183,64,.6); animation:pulse 2.4s ease-out infinite}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(244,183,64,.55)} 70%{box-shadow:0 0 0 9px rgba(244,183,64,0)} 100%{box-shadow:0 0 0 0 rgba(244,183,64,0)}}
+  .now{display:flex; align-items:baseline; gap:12px; min-width:0}
+  .stepno{font-family:ui-monospace,Menlo,Consolas,monospace; font-size:15px; color:var(--voice); font-weight:700; letter-spacing:.03em}
+  .stepname{font-size:16px; color:var(--ink); font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .tc{font-family:ui-monospace,Menlo,Consolas,monospace; font-size:13px; color:var(--dim)}
+  .meter{display:flex; gap:4px; flex:1; min-width:120px; justify-content:flex-end}
+  .seg{width:26px; height:6px; border-radius:3px; background:var(--edge); transition:background .3s}
+  .seg.on{background:var(--voice)}
+  .tools{display:flex; gap:8px}
+  .tool{font:inherit; font-size:13px; color:var(--body); background:transparent; border:1px solid var(--edge-2);
+    padding:6px 12px; border-radius:999px; cursor:pointer; transition:border-color .15s, color .15s}
+  .tool:hover{border-color:var(--ink); color:var(--ink)}
+  .terms{border-top:1px solid var(--edge); background:rgba(10,13,18,.6); font-size:12.5px; color:var(--dim);
+    padding:7px 20px; max-width:1120px; margin:0 auto; line-height:1.5}
+  .terms b{color:var(--body); font-weight:600}
+
+  /* ---- on-air stage ---- */
+  .onair{max-width:1120px; margin:0 auto; padding:132px 22px 120px}
+  .card{display:none}
+  .card.active{display:block}
+  .card.active{animation:rise .3s ease both}
+  @keyframes rise{from{opacity:0; transform:translateY(10px)} to{opacity:1; transform:none}}
+  .card.step{scroll-margin-top:120px; position:relative}
+
+  .head{position:relative; margin:0 0 22px}
+  .eyebrow{font-size:12px; letter-spacing:.2em; text-transform:uppercase; color:var(--voice); font-weight:700}
+  .title{font-size:clamp(28px,4.4vw,44px); line-height:1.05; margin:6px 0 0; color:var(--ink); font-weight:800; letter-spacing:-.02em}
+  .tc-in{margin-top:8px; font-family:ui-monospace,Menlo,Consolas,monospace; font-size:13px; color:var(--dim)}
+  .ghost{position:absolute; top:-30px; right:0; font-size:150px; line-height:1; font-weight:800; color:#fff; opacity:.03; pointer-events:none; z-index:0}
+
+  /* ---- channels ---- */
+  .ch{position:relative; background:var(--panel); border:1px solid var(--edge); border-left:5px solid var(--edge-2);
+    border-radius:var(--radius); padding:15px 20px 18px; margin:14px 0}
+  .ch-tab{display:flex; align-items:baseline; gap:12px; margin-bottom:10px}
+  .ch-name{font-size:12px; font-weight:800; letter-spacing:.16em; text-transform:uppercase}
+  .ch-sub{font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--dim)}
+  .ch-body p{margin:0 0 10px} .ch-body p:last-child{margin-bottom:0}
+  .ch.voice{border-left-color:var(--voice)} .ch.voice .ch-name{color:var(--voice)}
+  .ch.hands{border-left-color:var(--hands)} .ch.hands .ch-name{color:var(--hands)}
+  .ch.screen{border-left-color:var(--screen)} .ch.screen .ch-name{color:var(--screen)}
+  /* voice = the spoken script, large serif */
+  .ch.voice .ch-body{font-family:Georgia,"Times New Roman",serif; font-size:clamp(19px,2.3vw,27px); line-height:1.42; color:var(--ink)}
+  .ch.voice .ch-body p{margin-bottom:12px}
+  .ch.hands .ch-body, .ch.screen .ch-body{font-size:16px; color:var(--body)}
+  .ch-body b{color:var(--ink); font-weight:700}
+
+  code{font-family:ui-monospace,Menlo,Consolas,monospace; font-size:.9em; background:var(--term);
+    border:1px solid var(--edge); border-radius:5px; padding:1px 6px; color:#9FD3EC}
+  pre{position:relative; background:var(--term); border:1px solid var(--edge); border-radius:10px;
+    padding:14px 16px; margin:10px 0; overflow-x:auto; font-family:ui-monospace,Menlo,Consolas,monospace;
+    font-size:13.5px; line-height:1.75; color:#D6E7F5}
+  .copy{position:absolute; top:9px; right:9px; font:inherit; font-size:11px; letter-spacing:.06em; text-transform:uppercase;
+    padding:4px 9px; border:1px solid var(--edge-2); border-radius:6px; background:var(--panel); color:var(--hands); cursor:pointer}
+  .copy:hover{border-color:var(--hands)}
+
+  .tree{font-family:ui-monospace,Menlo,Consolas,monospace; font-size:14px; line-height:1.95; color:var(--body); margin:4px 0 12px}
+  .tree .hi{background:rgba(127,216,88,.16); color:var(--screen); border-radius:5px; padding:1px 7px}
+  .pipe{font-family:ui-monospace,Menlo,Consolas,monospace; font-size:15px; color:var(--hands); margin:0 0 12px}
+
+  .cue{display:inline-flex; align-items:center; gap:8px; margin-top:10px; background:rgba(127,216,88,.12);
+    border:1px solid rgba(127,216,88,.4); color:var(--screen); border-radius:999px; padding:7px 14px; font-size:14.5px; font-weight:600}
+  .cue::before{content:"CUE"; font-size:10px; letter-spacing:.14em; background:var(--screen); color:#0c1a06; padding:2px 6px; border-radius:4px; font-weight:800}
+
+  /* ---- transport ---- */
+  .transport{position:fixed; inset:auto 0 0 0; z-index:40; background:rgba(19,23,30,.95);
+    backdrop-filter:blur(8px); border-top:1px solid var(--edge); display:flex; align-items:center;
+    gap:14px; padding:11px 20px; max-width:1120px; margin:0 auto}
+  .step-btn{font:inherit; font-weight:600; color:var(--ink); background:var(--panel); border:1px solid var(--edge-2);
+    padding:9px 16px; border-radius:10px; cursor:pointer; white-space:nowrap}
+  .step-btn:hover{border-color:var(--ink)}
+  .scrub{display:flex; gap:6px; flex:1; justify-content:center; flex-wrap:wrap}
+  .tick{width:30px; height:8px; border-radius:4px; background:var(--edge); border:none; cursor:pointer; padding:0}
+  .tick:hover{background:var(--edge-2)}
+  .tick.on{background:var(--voice)}
+
+  /* ---- summoned panels (pre-flight / hold) ---- */
+  .backdrop{position:fixed; inset:0; background:rgba(6,8,12,.6); z-index:50; opacity:0; visibility:hidden; transition:opacity .2s}
+  .backdrop.open{opacity:1; visibility:visible}
+  .panel{position:fixed; z-index:60; top:50%; left:50%; transform:translate(-50%,-46%); width:min(680px,92vw);
+    max-height:80vh; overflow:auto; background:var(--panel); border:1px solid var(--edge-2); border-radius:16px;
+    padding:24px 26px; opacity:0; visibility:hidden; transition:opacity .2s, transform .2s; box-shadow:0 30px 80px rgba(0,0,0,.5)}
+  .panel.open{opacity:1; visibility:visible; transform:translate(-50%,-50%)}
+  .panel h2{margin:0 0 4px; font-size:22px; color:var(--ink); font-weight:800; letter-spacing:-.01em}
+  .panel .lede{margin:0 0 16px; color:var(--dim); font-size:14px}
+  .panel-close{position:absolute; top:16px; right:18px; background:none; border:none; color:var(--dim); font-size:22px; cursor:pointer; line-height:1}
+  .panel-close:hover{color:var(--ink)}
+  .checks{list-style:none; margin:0; padding:0}
+  .checks li{margin:0}
+  .checks label{display:flex; gap:12px; align-items:flex-start; padding:11px 12px; border-radius:10px; cursor:pointer;
+    border:1px solid transparent; color:var(--body)}
+  .checks label:hover{background:var(--panel-2); border-color:var(--edge)}
+  .checks input{margin-top:3px; width:17px; height:17px; accent-color:var(--screen); flex:none}
+  .checks input:checked+span{color:var(--dim); text-decoration:line-through}
+
+  .runrow{display:flex; align-items:center; gap:10px; background:var(--panel-2); border:1px solid var(--edge);
+    border-radius:10px; padding:11px 14px; margin:8px 0; font-size:14.5px; color:var(--body)}
+  .dot{width:12px; height:12px; border-radius:50%; flex:none}
+  .dot.green{background:var(--screen)} .dot.red{background:var(--alert)}
+  .panel .note{color:var(--dim); font-size:13.5px; margin-top:14px}
+
+  :focus-visible{outline:2px solid var(--hands); outline-offset:2px}
+
+  @media (max-width:640px){
+    .meter{display:none} .title{font-size:26px} .ghost{display:none}
+    .onair{padding-top:150px}
+  }
+  @media (prefers-reduced-motion:reduce){
+    .lamp{animation:none} .card.active{animation:none} .backdrop,.panel{transition:none}
+    html{scroll-behavior:auto}
+  }
+  @media print{
+    :root{--stage:#fff; --panel:#fff; --panel-2:#fff; --term:#f4f4f2; --edge:#ccc; --edge-2:#bbb;
+      --ink:#111; --body:#222; --dim:#666}
+    body{background:#fff; color:#111}
+    .gallery,.transport{position:static; backdrop-filter:none}
+    .card{display:block !important; page-break-inside:avoid; border-top:2px solid #ccc; padding-top:12px}
+    .onair{padding:0 12px} .lamp,.meter,.scrub,.tools,.ghost{display:none}
+    code,.tree .hi{color:#0b5}
+  }
 </style>
 </head>
 <body>
-<div class="glossary">
-  Plain words: <b>runner</b> = the computer GitHub lends you · <b>job</b> = a batch of steps on one runner · <b>workflow</b> = the whole .yml file · <b>step</b> = one command · <b>event</b> = the thing that starts it.
-</div>
-<div class="wrap">
-  <div class="rail" id="rail"></div>
 
-  <div class="card checklist">
-    <h2 style="margin-top:0">Dry-run for yourself first ✅</h2>
-    <p style="color:#666">Tick each as you confirm it in your own GitHub repo. State is saved in this browser.</p>
-    <ul style="list-style:none;padding-left:0">
-      <li><label><input type="checkbox" data-k="dr1"> Pushed this repo to my GitHub account</label></li>
-      <li><label><input type="checkbox" data-k="dr2"> Built tests.yml live from blank → first green run</label></li>
-      <li><label><input type="checkbox" data-k="dr3"> Opened .github/workflows/tests.yml on GitHub and pointed at it</label></li>
-      <li><label><input type="checkbox" data-k="dr4"> Added pull_request + workflow_dispatch; clicked Run workflow</label></li>
-      <li><label><input type="checkbox" data-k="dr5"> Broke apply_discount → saw red ✗ on a PR → reverted → green ✓</label></li>
-      <li><label><input type="checkbox" data-k="dr6"> Added the matrix; saw 3 jobs run</label></li>
-      <li><label><input type="checkbox" data-k="dr7"> Added badge + artifact; downloaded the report</label></li>
-      <li><label><input type="checkbox" data-k="dr8"> Timed myself — finished within 60 minutes</label></li>
-    </ul>
-  </div>
-
-  <div class="card fallback">
-    <h2 style="margin-top:0">If wifi / Actions is slow ⚠️</h2>
-    <div class="zone say"><div class="label">Say this</div><p>"While that runs, here's exactly what you'll see." </p></div>
-    <p>Point at these mock run rows and keep talking; the real run will catch up.</p>
-    <div class="runrow"><span class="dot green"></span> Tests · main · passed in 14s</div>
-    <div class="runrow"><span class="dot red"></span> Tests · fix-discount · failed in 12s — 1 test failed</div>
-    <p style="color:#666">Backup copies of every stage are in <code>.github/workflows/stages/</code> (v1–v4) if you need to paste a known-good file.</p>
-  </div>
-
-  <div class="card step" data-short="What is CI">
-    <div class="head"><span class="stage">Intro · 1 of 8</span><span class="clock">aim: 0:00–0:08</span></div>
-    <div class="zone say"><div class="label">Say this</div><p>"Everyone here runs tests by hand. Today we hand that job to a robot that runs them for us — every time the code changes. That robot is GitHub Actions. It lives inside your repo, as one text file."</p></div>
-    <div class="zone do"><div class="label">Do this</div><p>Have the sample repo open on screen at the <b>Code</b> tab, so everyone can see the <code>src</code>, <code>tests</code>, and <code>.github</code> folders while you talk.</p></div>
-    <div class="zone show"><div class="label">Show them — where it lives</div>
-      <p style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:15px;margin:0 0 10px">event → workflow → job → step → runner</p>
-      <div class="tree">
-        <div>📁 gha-for-testers</div>
-        <div>&nbsp;&nbsp;📁 src</div>
-        <div>&nbsp;&nbsp;📁 tests</div>
-        <div>&nbsp;&nbsp;📁 .github</div>
-        <div>&nbsp;&nbsp;&nbsp;&nbsp;📁 workflows</div>
-        <div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="hi">📄 tests.yml</span> ← the whole configuration</div>
-      </div>
-      <p>"GitHub looks in exactly one place — <code>.github/workflows</code>. Any <code>.yml</code> file here becomes a workflow."</p>
-      <span class="aha">Aha: "It's not scary infrastructure — it's one file in one folder."</span>
+<header class="gallery">
+  <div class="bar">
+    <div class="brand"><span class="lamp" aria-hidden="true"></span><span>On air</span></div>
+    <div class="now">
+      <span class="stepno" id="g-step">1/8</span>
+      <span class="stepname" id="g-name">What is CI?</span>
+      <span class="tc" id="g-tc">0:00–0:08</span>
+    </div>
+    <div class="meter" id="g-meter" aria-hidden="true"></div>
+    <div class="tools">
+      <button class="tool" data-panel="pre">Pre-flight</button>
+      <button class="tool" data-panel="hold">Hold</button>
     </div>
   </div>
+  <div class="terms">
+    <b>runner</b> = the computer GitHub lends you · <b>job</b> = a batch of steps on one runner · <b>workflow</b> = the whole .yml file · <b>step</b> = one command · <b>event</b> = the thing that starts it.
+  </div>
+</header>
 
-  <div class="card step" data-short="Stage 1 build">
-    <div class="head"><span class="stage">Stage 1 · 2 of 8</span><span class="clock">aim: 0:08–0:25</span></div>
-    <div class="zone say"><div class="label">Say this</div><p>"Watch me build it from nothing. I'll type each line and tell you what it means. You do NOT make the folder — GitHub creates it for you the moment you commit."</p></div>
-    <div class="zone do"><div class="label">Do this</div>
-      <p>Click the <b>Actions</b> tab → <b>set up a workflow yourself</b>. Delete the sample. Rename the file to <b>tests.yml</b>. Type:</p>
-      <pre>name: Tests
+<main class="onair">
+
+  <section class="card step" data-short="What is CI?" data-clock="0:00–0:08">
+    <div class="head"><span class="ghost" aria-hidden="true">1</span>
+      <div class="eyebrow">Intro · step 1 of 8</div>
+      <h1 class="title">What is CI?</h1>
+      <div class="tc-in">aim 0:00–0:08</div>
+    </div>
+    <div class="ch voice"><div class="ch-tab"><span class="ch-name">Voice</span><span class="ch-sub">say this</span></div>
+      <div class="ch-body"><p>"Everyone here runs tests by hand. Today we hand that job to a robot that runs them for us — every time the code changes. That robot is GitHub Actions. It lives inside your repo, as one text file."</p></div>
+    </div>
+    <div class="ch hands"><div class="ch-tab"><span class="ch-name">Hands</span><span class="ch-sub">do this</span></div>
+      <div class="ch-body"><p>Have the sample repo open on screen at the <b>Code</b> tab, so everyone can see the <code>src</code>, <code>tests</code>, and <code>.github</code> folders while you talk.</p></div>
+    </div>
+    <div class="ch screen"><div class="ch-tab"><span class="ch-name">Screen</span><span class="ch-sub">show them — where it lives</span></div>
+      <div class="ch-body">
+        <p class="pipe">event → workflow → job → step → runner</p>
+        <div class="tree">
+          <div>📁 gha-for-testers</div>
+          <div>&nbsp;&nbsp;📁 src</div>
+          <div>&nbsp;&nbsp;📁 tests</div>
+          <div>&nbsp;&nbsp;📁 .github</div>
+          <div>&nbsp;&nbsp;&nbsp;&nbsp;📁 workflows</div>
+          <div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="hi">📄 tests.yml</span> ← the whole configuration</div>
+        </div>
+        <p>"GitHub looks in exactly one place — <code>.github/workflows</code>. Any <code>.yml</code> file here becomes a workflow."</p>
+        <span class="cue">"It's not scary infrastructure — it's one file in one folder."</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="card step" data-short="Build it live" data-clock="0:08–0:25">
+    <div class="head"><span class="ghost" aria-hidden="true">2</span>
+      <div class="eyebrow">Stage 1 · step 2 of 8</div>
+      <h1 class="title">Build the workflow live</h1>
+      <div class="tc-in">aim 0:08–0:25</div>
+    </div>
+    <div class="ch voice"><div class="ch-tab"><span class="ch-name">Voice</span><span class="ch-sub">say this</span></div>
+      <div class="ch-body"><p>"Watch me build it from nothing. I'll type each line and tell you what it means. You do NOT make the folder — GitHub creates it for you the moment you commit."</p></div>
+    </div>
+    <div class="ch hands"><div class="ch-tab"><span class="ch-name">Hands</span><span class="ch-sub">do this</span></div>
+      <div class="ch-body">
+        <p>Click the <b>Actions</b> tab → <b>set up a workflow yourself</b>. Delete the sample. Rename the file to <b>tests.yml</b>. Type:</p>
+        <pre>name: Tests
 on: push
 jobs:
   test:
@@ -111,131 +225,262 @@ jobs:
           python-version: "3.12"
       - run: pip install -r requirements.txt
       - run: pytest</pre>
-      <p>Then click the green <b>Commit changes…</b> button → <b>Commit changes</b>.</p>
+        <p>Then click the green <b>Commit changes…</b> button → <b>Commit changes</b>.</p>
+      </div>
     </div>
-    <div class="zone show"><div class="label">Show them</div>
-      <p>Narrate as you type: "<b>name</b> is just a label. <b>on: push</b> is WHEN — every push. <b>jobs</b> → one job called test. <b>runs-on</b> is WHICH machine. <b>steps</b> are WHAT, in order: get the code, install Python, install pytest, run pytest."</p>
-      <span class="aha">Aha: "That's the whole file. Five ideas: name, on, jobs, runs-on, steps."</span>
+    <div class="ch screen"><div class="ch-tab"><span class="ch-name">Screen</span><span class="ch-sub">show them</span></div>
+      <div class="ch-body">
+        <p>Narrate as you type: "<b>name</b> is just a label. <b>on: push</b> is WHEN — every push. <b>jobs</b> → one job called test. <b>runs-on</b> is WHICH machine. <b>steps</b> are WHAT, in order: get the code, install Python, install pytest, run pytest."</p>
+        <span class="cue">"That's the whole file. Five ideas: name, on, jobs, runs-on, steps."</span>
+      </div>
     </div>
-  </div>
+  </section>
 
-  <div class="card step" data-short="Show the folder">
-    <div class="head"><span class="stage">Stage 1 · 3 of 8</span><span class="clock">aim: ~0:20</span></div>
-    <div class="zone say"><div class="label">Say this</div><p>"Remember I said GitHub makes the folder? Let's go look — it's really there now."</p></div>
-    <div class="zone do"><div class="label">Do this</div><p>Click the <b>Code</b> tab. Click the <b>.github</b> folder → <b>workflows</b> folder → <b>tests.yml</b>.</p></div>
-    <div class="zone show"><div class="label">Show them</div>
-      <p>Point at the path breadcrumb <code>.github / workflows / tests.yml</code>: "This is the entire configuration. One file, one folder — and I never created the folder myself."</p>
-      <span class="aha">Aha: "Committing the file created the folder. That's all the setup there is."</span>
+  <section class="card step" data-short="Show the folder" data-clock="~0:20">
+    <div class="head"><span class="ghost" aria-hidden="true">3</span>
+      <div class="eyebrow">Stage 1 · step 3 of 8</div>
+      <h1 class="title">Show them the folder</h1>
+      <div class="tc-in">aim ~0:20</div>
     </div>
-  </div>
-
-  <div class="card step" data-short="First green run">
-    <div class="head"><span class="stage">Stage 1 · 4 of 8</span><span class="clock">aim: ~0:23</span></div>
-    <div class="zone say"><div class="label">Say this</div><p>"The moment I committed, the robot started. Let's watch it."</p></div>
-    <div class="zone do"><div class="label">Do this</div><p>Click the <b>Actions</b> tab. Click the newest run at the top. Click the <b>test</b> job to expand the steps.</p></div>
-    <div class="zone show"><div class="label">Show them</div>
-      <p>Point at the status: "A yellow dot means it's running… now a <b>green tick</b> — every test passed, and nobody touched a keyboard. Click a step to see the actual pytest output."</p>
-      <span class="aha">Aha: "That's continuous integration. That's the whole idea."</span>
+    <div class="ch voice"><div class="ch-tab"><span class="ch-name">Voice</span><span class="ch-sub">say this</span></div>
+      <div class="ch-body"><p>"Remember I said GitHub makes the folder? Let's go look — it's really there now."</p></div>
     </div>
-  </div>
+    <div class="ch hands"><div class="ch-tab"><span class="ch-name">Hands</span><span class="ch-sub">do this</span></div>
+      <div class="ch-body"><p>Click the <b>Code</b> tab. Click the <b>.github</b> folder → <b>workflows</b> folder → <b>tests.yml</b>.</p></div>
+    </div>
+    <div class="ch screen"><div class="ch-tab"><span class="ch-name">Screen</span><span class="ch-sub">show them</span></div>
+      <div class="ch-body">
+        <p>Point at the path breadcrumb <code>.github / workflows / tests.yml</code>: "This is the entire configuration. One file, one folder — and I never created the folder myself."</p>
+        <span class="cue">"Committing the file created the folder. That's all the setup there is."</span>
+      </div>
+    </div>
+  </section>
 
-  <div class="card step" data-short="Stage 2 PR gate">
-    <div class="head"><span class="stage">Stage 2 · 5 of 8</span><span class="clock">aim: 0:25–0:38</span></div>
-    <div class="zone say"><div class="label">Say this</div><p>"Right now it runs on a push. But the real power is stopping a broken change BEFORE it merges. Let's make it run on pull requests too — and give ourselves a manual button."</p></div>
-    <div class="zone do"><div class="label">Do this — edit the triggers</div>
-      <p><b>Actions</b> is done; go to <b>Code</b> → open <code>.github/workflows/tests.yml</code> → click the pencil ✏️. Replace the <code>on: push</code> line with:</p>
-      <pre>on:
+  <section class="card step" data-short="First green run" data-clock="~0:23">
+    <div class="head"><span class="ghost" aria-hidden="true">4</span>
+      <div class="eyebrow">Stage 1 · step 4 of 8</div>
+      <h1 class="title">The first green run</h1>
+      <div class="tc-in">aim ~0:23</div>
+    </div>
+    <div class="ch voice"><div class="ch-tab"><span class="ch-name">Voice</span><span class="ch-sub">say this</span></div>
+      <div class="ch-body"><p>"The moment I committed, the robot started. Let's watch it."</p></div>
+    </div>
+    <div class="ch hands"><div class="ch-tab"><span class="ch-name">Hands</span><span class="ch-sub">do this</span></div>
+      <div class="ch-body"><p>Click the <b>Actions</b> tab. Click the newest run at the top. Click the <b>test</b> job to expand the steps.</p></div>
+    </div>
+    <div class="ch screen"><div class="ch-tab"><span class="ch-name">Screen</span><span class="ch-sub">show them</span></div>
+      <div class="ch-body">
+        <p>Point at the status: "A yellow dot means it's running… now a <b>green tick</b> — every test passed, and nobody touched a keyboard. Click a step to see the actual pytest output."</p>
+        <span class="cue">"That's continuous integration. That's the whole idea."</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="card step" data-short="The PR gate" data-clock="0:25–0:38">
+    <div class="head"><span class="ghost" aria-hidden="true">5</span>
+      <div class="eyebrow">Stage 2 · step 5 of 8</div>
+      <h1 class="title">The pull-request gate</h1>
+      <div class="tc-in">aim 0:25–0:38</div>
+    </div>
+    <div class="ch voice"><div class="ch-tab"><span class="ch-name">Voice</span><span class="ch-sub">say this</span></div>
+      <div class="ch-body"><p>"Right now it runs on a push. But the real power is stopping a broken change BEFORE it merges. Let's make it run on pull requests too — and give ourselves a manual button."</p></div>
+    </div>
+    <div class="ch hands"><div class="ch-tab"><span class="ch-name">Hands</span><span class="ch-sub">do this — edit the triggers</span></div>
+      <div class="ch-body">
+        <p><b>Actions</b> is done; go to <b>Code</b> → open <code>.github/workflows/tests.yml</code> → click the pencil ✏️. Replace the <code>on: push</code> line with:</p>
+        <pre>on:
   push:
   pull_request:
   workflow_dispatch:</pre>
-      <p>Commit. Now click <b>Actions</b> → <b>Tests</b> → the <b>Run workflow</b> button appeared — that's <code>workflow_dispatch</code>. Click it to run on demand.</p>
+        <p>Commit. Now click <b>Actions</b> → <b>Tests</b> → the <b>Run workflow</b> button appeared — that's <code>workflow_dispatch</code>. Click it to run on demand.</p>
+      </div>
     </div>
-    <div class="zone do"><div class="label">Do this — break it on a branch</div>
-      <p>Go to <b>Code</b> → open <code>src/cart.py</code> → pencil ✏️. Change this one line:</p>
-      <pre>return round(amount * (1 - percent / 100), 2)</pre>
-      <p>to (a real bug — it forgets the discount):</p>
-      <pre>return round(amount, 2)</pre>
-      <p>Under "Commit changes", choose <b>Create a new branch</b> (e.g. <code>fix-discount</code>) → <b>Propose changes</b> → <b>Create pull request</b>.</p>
+    <div class="ch hands"><div class="ch-tab"><span class="ch-name">Hands</span><span class="ch-sub">do this — break it on a branch</span></div>
+      <div class="ch-body">
+        <p>Go to <b>Code</b> → open <code>src/cart.py</code> → pencil ✏️. Change this one line:</p>
+        <pre>return round(amount * (1 - percent / 100), 2)</pre>
+        <p>to (a real bug — it forgets the discount):</p>
+        <pre>return round(amount, 2)</pre>
+        <p>Under "Commit changes", choose <b>Create a new branch</b> (e.g. <code>fix-discount</code>) → <b>Propose changes</b> → <b>Create pull request</b>.</p>
+      </div>
     </div>
-    <div class="zone show"><div class="label">Show them</div>
-      <p>On the PR, point at the checks box: "Yellow… now a <b>red ✗</b>. The robot ran our tests on my change and one failed — <code>test_apply_discount_takes_percent_off</code>. GitHub is telling us: don't merge this."</p>
-      <p>Then fix it: edit the branch's <code>cart.py</code> back to the correct line, commit. Watch the check go <b>green ✓</b>. Merge.</p>
-      <span class="aha">Aha: "The test caught my bug automatically — that's the safety net."</span>
+    <div class="ch screen"><div class="ch-tab"><span class="ch-name">Screen</span><span class="ch-sub">show them</span></div>
+      <div class="ch-body">
+        <p>On the PR, point at the checks box: "Yellow… now a <b>red ✗</b>. The robot ran our tests on my change and one failed — <code>test_apply_discount_takes_percent_off</code>. GitHub is telling us: don't merge this."</p>
+        <p>Then fix it: edit the branch's <code>cart.py</code> back to the correct line, commit. Watch the check go <b>green ✓</b>. Merge.</p>
+        <span class="cue">"The test caught my bug automatically — that's the safety net."</span>
+      </div>
     </div>
-  </div>
+  </section>
 
-  <div class="card step" data-short="Stage 3 matrix">
-    <div class="head"><span class="stage">Stage 3 · 6 of 8</span><span class="clock">aim: 0:38–0:48</span></div>
-    <div class="zone say"><div class="label">Say this</div><p>"Our users aren't all on one Python version. Watch us test three at once — from one push."</p></div>
-    <div class="zone do"><div class="label">Do this</div>
-      <p>Edit <code>tests.yml</code>. Under <code>test:</code>, add a <code>strategy</code> block and swap the fixed version for the matrix value:</p>
-      <pre>    strategy:
+  <section class="card step" data-short="Test every version" data-clock="0:38–0:48">
+    <div class="head"><span class="ghost" aria-hidden="true">6</span>
+      <div class="eyebrow">Stage 3 · step 6 of 8</div>
+      <h1 class="title">Test every version at once</h1>
+      <div class="tc-in">aim 0:38–0:48</div>
+    </div>
+    <div class="ch voice"><div class="ch-tab"><span class="ch-name">Voice</span><span class="ch-sub">say this</span></div>
+      <div class="ch-body"><p>"Our users aren't all on one Python version. Watch us test three at once — from one push."</p></div>
+    </div>
+    <div class="ch hands"><div class="ch-tab"><span class="ch-name">Hands</span><span class="ch-sub">do this</span></div>
+      <div class="ch-body">
+        <p>Edit <code>tests.yml</code>. Under <code>test:</code>, add a <code>strategy</code> block and swap the fixed version for the matrix value:</p>
+        <pre>    strategy:
       matrix:
         python-version: ["3.10", "3.11", "3.12"]</pre>
-      <p>Change the setup-python <code>python-version:</code> line to:</p>
-      <pre>          python-version: ${{ matrix.python-version }}</pre>
-      <p>Commit. (Full file is <code>stages/v3-matrix.yml</code> if you need it.)</p>
+        <p>Change the setup-python <code>python-version:</code> line to:</p>
+        <pre>          python-version: ${{ matrix.python-version }}</pre>
+        <p>Commit. (Full file is <code>stages/v3-matrix.yml</code> if you need it.)</p>
+      </div>
     </div>
-    <div class="zone show"><div class="label">Show them</div>
-      <p>In <b>Actions</b>, point at the run: "One push — but three jobs, one per version, running in parallel. Each gets its own green tick."</p>
-      <span class="aha">Aha: "Coverage across versions for free — you just listed them."</span>
+    <div class="ch screen"><div class="ch-tab"><span class="ch-name">Screen</span><span class="ch-sub">show them</span></div>
+      <div class="ch-body">
+        <p>In <b>Actions</b>, point at the run: "One push — but three jobs, one per version, running in parallel. Each gets its own green tick."</p>
+        <span class="cue">"Coverage across versions for free — you just listed them."</span>
+      </div>
     </div>
-  </div>
+  </section>
 
-  <div class="card step" data-short="Stage 4 badge">
-    <div class="head"><span class="stage">Stage 4 · 7 of 8</span><span class="clock">aim: 0:48–0:54</span></div>
-    <div class="zone say"><div class="label">Say this</div><p>"Two finishing touches testers love: a live badge that proves we're green, and a saved test report you can download."</p></div>
-    <div class="zone do"><div class="label">Do this</div>
-      <p>Edit <code>tests.yml</code>: change <code>- run: pytest</code> to produce a report and add an upload step:</p>
-      <pre>      - run: pytest --junitxml=report.xml
+  <section class="card step" data-short="Badge & report" data-clock="0:48–0:54">
+    <div class="head"><span class="ghost" aria-hidden="true">7</span>
+      <div class="eyebrow">Stage 4 · step 7 of 8</div>
+      <h1 class="title">Badge &amp; report</h1>
+      <div class="tc-in">aim 0:48–0:54</div>
+    </div>
+    <div class="ch voice"><div class="ch-tab"><span class="ch-name">Voice</span><span class="ch-sub">say this</span></div>
+      <div class="ch-body"><p>"Two finishing touches testers love: a live badge that proves we're green, and a saved test report you can download."</p></div>
+    </div>
+    <div class="ch hands"><div class="ch-tab"><span class="ch-name">Hands</span><span class="ch-sub">do this</span></div>
+      <div class="ch-body">
+        <p>Edit <code>tests.yml</code>: change <code>- run: pytest</code> to produce a report and add an upload step:</p>
+        <pre>      - run: pytest --junitxml=report.xml
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: test-report-${{ matrix.python-version }}
           path: report.xml</pre>
-      <p>Commit. Then edit <code>README.md</code> and replace <code>OWNER/REPO</code> in the badge line with your username and repo. Commit.</p>
+        <p>Commit. Then edit <code>README.md</code> and replace <code>OWNER/REPO</code> in the badge line with your username and repo. Commit.</p>
+      </div>
     </div>
-    <div class="zone show"><div class="label">Show them</div>
-      <p>Show the README badge going green. In the latest <b>Actions</b> run, scroll to <b>Artifacts</b> and download <code>test-report-3.12</code>. Mention: "You can also run this on a timer with <code>schedule:</code> — e.g. every night."</p>
-      <span class="aha">Aha: "Now anyone can see we're green, and every run keeps its receipts."</span>
+    <div class="ch screen"><div class="ch-tab"><span class="ch-name">Screen</span><span class="ch-sub">show them</span></div>
+      <div class="ch-body">
+        <p>Show the README badge going green. In the latest <b>Actions</b> run, scroll to <b>Artifacts</b> and download <code>test-report-3.12</code>. Mention: "You can also run this on a timer with <code>schedule:</code> — e.g. every night."</p>
+        <span class="cue">"Now anyone can see we're green, and every run keeps its receipts."</span>
+      </div>
     </div>
-  </div>
+  </section>
 
-  <div class="card step" data-short="Recap">
-    <div class="head"><span class="stage">Recap · 8 of 8</span><span class="clock">aim: 0:54–1:00</span></div>
-    <div class="zone say"><div class="label">Say this</div><p>"In one hour we answered four questions. What is it? A robot that runs your tests. Where does it live? One .yml file in .github/workflows. How is it triggered? push, pull_request, the manual button, and schedule. How do you write it? name, on, jobs, runs-on, steps — mind the indentation."</p></div>
-    <div class="zone do"><div class="label">Do this</div><p>Share the repo link and hand out <code>CHEATSHEET.md</code>. Open the floor for questions.</p></div>
-    <div class="zone show"><div class="label">Show them</div><p>Flip back to the green matrix run and the badge as the closing image.</p><span class="aha">Aha: "You could set this up on your own project this afternoon."</span></div>
-  </div>
+  <section class="card step" data-short="Recap" data-clock="0:54–1:00">
+    <div class="head"><span class="ghost" aria-hidden="true">8</span>
+      <div class="eyebrow">Recap · step 8 of 8</div>
+      <h1 class="title">Recap &amp; questions</h1>
+      <div class="tc-in">aim 0:54–1:00</div>
+    </div>
+    <div class="ch voice"><div class="ch-tab"><span class="ch-name">Voice</span><span class="ch-sub">say this</span></div>
+      <div class="ch-body"><p>"In one hour we answered four questions. What is it? A robot that runs your tests. Where does it live? One .yml file in .github/workflows. How is it triggered? push, pull_request, the manual button, and schedule. How do you write it? name, on, jobs, runs-on, steps — mind the indentation."</p></div>
+    </div>
+    <div class="ch hands"><div class="ch-tab"><span class="ch-name">Hands</span><span class="ch-sub">do this</span></div>
+      <div class="ch-body"><p>Share the repo link and hand out <code>CHEATSHEET.md</code>. Open the floor for questions.</p></div>
+    </div>
+    <div class="ch screen"><div class="ch-tab"><span class="ch-name">Screen</span><span class="ch-sub">show them</span></div>
+      <div class="ch-body">
+        <p>Flip back to the green matrix run and the badge as the closing image.</p>
+        <span class="cue">"You could set this up on your own project this afternoon."</span>
+      </div>
+    </div>
+  </section>
 
-  <div class="nav">
-    <button id="prev">← Prev</button>
-    <button id="next">Next →</button>
-  </div>
+</main>
+
+<nav class="transport">
+  <button class="step-btn" id="prev">← Prev</button>
+  <div class="scrub" id="scrub" aria-hidden="true"></div>
+  <button class="step-btn" id="next">Next →</button>
+</nav>
+
+<div class="backdrop" id="backdrop"></div>
+
+<div class="panel" id="panel-pre" role="dialog" aria-label="Pre-flight checklist">
+  <button class="panel-close" data-close aria-label="Close">✕</button>
+  <h2>Pre-flight — dry-run yourself first</h2>
+  <p class="lede">Tick each as you confirm it in your own GitHub repo. State is saved in this browser.</p>
+  <ul class="checks">
+    <li><label><input type="checkbox" data-k="dr1"><span>Pushed this repo to my GitHub account</span></label></li>
+    <li><label><input type="checkbox" data-k="dr2"><span>Built tests.yml live from blank → first green run</span></label></li>
+    <li><label><input type="checkbox" data-k="dr3"><span>Opened .github/workflows/tests.yml on GitHub and pointed at it</span></label></li>
+    <li><label><input type="checkbox" data-k="dr4"><span>Added pull_request + workflow_dispatch; clicked Run workflow</span></label></li>
+    <li><label><input type="checkbox" data-k="dr5"><span>Broke apply_discount → saw red ✗ on a PR → reverted → green ✓</span></label></li>
+    <li><label><input type="checkbox" data-k="dr6"><span>Added the matrix; saw 3 jobs run</span></label></li>
+    <li><label><input type="checkbox" data-k="dr7"><span>Added badge + artifact; downloaded the report</span></label></li>
+    <li><label><input type="checkbox" data-k="dr8"><span>Timed myself — finished within 60 minutes</span></label></li>
+  </ul>
 </div>
+
+<div class="panel" id="panel-hold" role="dialog" aria-label="Hold screen">
+  <button class="panel-close" data-close aria-label="Close">✕</button>
+  <h2>Hold — if wifi / Actions is slow</h2>
+  <p class="lede">Point at these mock run rows and keep talking; the real run will catch up.</p>
+  <div class="ch voice" style="margin-top:0"><div class="ch-tab"><span class="ch-name">Voice</span><span class="ch-sub">say this</span></div>
+    <div class="ch-body"><p>"While that runs, here's exactly what you'll see."</p></div>
+  </div>
+  <div class="runrow"><span class="dot green"></span> Tests · main · passed in 14s</div>
+  <div class="runrow"><span class="dot red"></span> Tests · fix-discount · failed in 12s — 1 test failed</div>
+  <p class="note">Backup copies of every stage are in <code>.github/workflows/stages/</code> (v1–v4) if you need to paste a known-good file.</p>
+</div>
+
 <script>
-  function copyBtn(pre){ const b=document.createElement('button'); b.className='copy'; b.textContent='Copy';
-    b.onclick=()=>{ const t=pre.cloneNode(true); const x=t.querySelector('.copy'); if(x)x.remove();
-    navigator.clipboard.writeText(t.textContent.trim()); b.textContent='Copied'; setTimeout(()=>b.textContent='Copy',1200); };
-    pre.appendChild(b); }
-  document.querySelectorAll('pre').forEach(copyBtn);
+  var cards=[].slice.call(document.querySelectorAll('.card.step'));
+  var gStep=document.getElementById('g-step'), gName=document.getElementById('g-name'), gTc=document.getElementById('g-tc');
+  var meter=document.getElementById('g-meter'), scrub=document.getElementById('scrub');
+  var i=0;
 
-  const cards=[...document.querySelectorAll('.card.step')];
-  const rail=document.getElementById('rail');
-  let i=0;
-  cards.forEach((c,n)=>{ const b=document.createElement('button'); b.textContent=(c.dataset.short||('#'+n));
-    b.onclick=()=>go(n); rail.appendChild(b); });
-  function go(n){ i=Math.max(0,Math.min(cards.length-1,n));
-    cards.forEach((c,k)=>c.classList.toggle('active',k===i));
-    [...rail.children].forEach((b,k)=>b.classList.toggle('here',k===i));
-    cards[i].scrollIntoView({behavior:'smooth',block:'start'}); }
-  document.getElementById('prev').onclick=()=>go(i-1);
-  document.getElementById('next').onclick=()=>go(i+1);
-  document.addEventListener('keydown',e=>{ if(e.key==='ArrowRight')go(i+1); if(e.key==='ArrowLeft')go(i-1); });
+  cards.forEach(function(c,n){
+    var s=document.createElement('div'); s.className='seg'; meter.appendChild(s);
+    var t=document.createElement('button'); t.className='tick'; t.title=c.dataset.short;
+    t.onclick=function(){go(n);}; scrub.appendChild(t);
+  });
+  var segs=[].slice.call(meter.children), ticks=[].slice.call(scrub.children);
 
-  document.querySelectorAll('input[type=checkbox][data-k]').forEach(cb=>{
+  function go(n){
+    i=Math.max(0,Math.min(cards.length-1,n));
+    cards.forEach(function(c,k){c.classList.toggle('active',k===i);});
+    segs.forEach(function(s,k){s.classList.toggle('on',k<=i);});
+    ticks.forEach(function(t,k){t.classList.toggle('on',k===i);});
+    var c=cards[i];
+    gStep.textContent=(i+1)+'/'+cards.length;
+    gName.textContent=c.dataset.short;
+    gTc.textContent=c.dataset.clock;
+    c.scrollIntoView({behavior:'smooth',block:'start'});
+  }
+  document.getElementById('prev').onclick=function(){go(i-1);};
+  document.getElementById('next').onclick=function(){go(i+1);};
+  document.addEventListener('keydown',function(e){
+    if(e.key==='ArrowRight')go(i+1);
+    if(e.key==='ArrowLeft')go(i-1);
+    if(e.key==='Escape')closePanels();
+  });
+
+  document.querySelectorAll('pre').forEach(function(pre){
+    var b=document.createElement('button'); b.className='copy'; b.textContent='Copy';
+    b.onclick=function(){ var t=pre.cloneNode(true); var x=t.querySelector('.copy'); if(x)x.remove();
+      navigator.clipboard.writeText(t.textContent.trim()); b.textContent='Copied'; setTimeout(function(){b.textContent='Copy';},1200); };
+    pre.appendChild(b);
+  });
+
+  document.querySelectorAll('input[type=checkbox][data-k]').forEach(function(cb){
     cb.checked=localStorage.getItem(cb.dataset.k)==='1';
-    cb.onchange=()=>localStorage.setItem(cb.dataset.k, cb.checked?'1':'0'); });
+    cb.onchange=function(){localStorage.setItem(cb.dataset.k, cb.checked?'1':'0');};
+  });
+
+  var backdrop=document.getElementById('backdrop');
+  function closePanels(){ backdrop.classList.remove('open');
+    document.querySelectorAll('.panel').forEach(function(p){p.classList.remove('open');}); }
+  document.querySelectorAll('[data-panel]').forEach(function(btn){
+    btn.onclick=function(){ closePanels(); var p=document.getElementById('panel-'+btn.dataset.panel);
+      if(p){p.classList.add('open'); backdrop.classList.add('open');} };
+  });
+  document.querySelectorAll('[data-close]').forEach(function(b){b.onclick=closePanels;});
+  backdrop.onclick=closePanels;
 
   go(0);
 </script>
