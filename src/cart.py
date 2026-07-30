@@ -7,4 +7,5 @@ def total(cart):
 
 
 def apply_discount(amount, percent):
+    
     return round(amount * (1 - percent / 100), 2)
